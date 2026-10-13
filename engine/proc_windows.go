@@ -23,7 +23,8 @@ func killProcessGroup(cmd *exec.Cmd) {
 
 func detach(cmd *exec.Cmd) {}
 
-func openPath(p string)          { exec.Command("explorer", p).Start() }
-func revealPath(p string)        { exec.Command("explorer", "/select,", p).Start() }
-func quickLook(p string)         { openPath(p) }
-func notifyOS(title, msg string) {}
+func openPath(p string)           { exec.Command("explorer", p).Start() }
+func revealPath(p string)         { exec.Command("explorer", "/select,", p).Start() }
+func quickLook(p string)          { openPath(p) }
+func notifyOS(title, msg string)  {}
+func freeSpace(path string) int64 { return 0 }

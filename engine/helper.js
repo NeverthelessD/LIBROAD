@@ -162,6 +162,25 @@ function run(argv) {
     return;
   }
   var list = readList(argv[1]);
+  if (mode === 'merge') {
+    // 여러 PDF를 차례대로 하나로 합치기
+    var outPath = argv[2];
+    try {
+      var out = $.PDFDocument.alloc.init;
+      for (var m = 0; m < list.length; m++) {
+        var src = openPDF(list[m]);
+        if (!src) throw new Error('PDF를 열 수 없어요: ' + list[m]);
+        if (src.isLocked) throw new Error('암호가 걸린 PDF는 합칠 수 없어요');
+        var n = src.pageCount;
+        for (var k = 0; k < n; k++) out.insertPageAtIndex(src.pageAtIndex(k), out.pageCount);
+      }
+      var ok = out.writeToFile(outPath);
+      emit({ path: outPath, ok: !!ok, pages: out.pageCount });
+    } catch (e) {
+      emit({ path: outPath, ok: false, error: String(e) });
+    }
+    return;
+  }
   var maxPages = parseInt(argv[2] || '60', 10);
   for (var i = 0; i < list.length; i++) {
     var p = list[i];

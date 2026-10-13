@@ -834,7 +834,7 @@ func (o *Ops) undo(h *History, job *Job) {
 			break
 		}
 		switch it.Act {
-		case "copy":
+		case "copy", "create":
 			if fileExists(it.To) {
 				toTrash = append(toTrash, PlanItem{Src: it.To, Name: filepath.Base(it.To)})
 			} else {

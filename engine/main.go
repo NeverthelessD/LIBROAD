@@ -70,6 +70,7 @@ type App struct {
 
 	jobs *JobManager
 	lib  *Library
+	conv *ConvTools
 	ops  *Ops
 	upd  *Updater
 
@@ -112,6 +113,7 @@ func runEngine() {
 	app.upd = NewUpdater(support)
 	app.ops = NewOps(support)
 	app.lib = NewLibrary(support)
+	app.conv = NewConvTools(support)
 
 	ln := listen(os.Getenv("LIBROAD_PORT"))
 	app.port = ln.Addr().(*net.TCPAddr).Port
@@ -425,6 +427,13 @@ func (a *App) routes() http.Handler {
 		}
 		writeJSON(w, map[string]any{"ok": true, "job": id})
 	})
+
+	// PDF로 바꾸기
+	api("/api/convert/state", a.handleConvertState)
+	api("/api/convert/check", a.handleConvertCheck)
+	api("/api/convert/install", a.handleConvertInstall)
+	api("/api/convert/remove", a.handleConvertRemove)
+	api("/api/convert/run", a.handleConvertRun)
 
 	// 정리하기
 	api("/api/cleanup/start", a.handleCleanupStart)

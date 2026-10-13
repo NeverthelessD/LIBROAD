@@ -21,6 +21,10 @@ mode = sys.argv[1]
 if mode == "check":
     emit({"check": True, "vision": True, "pdfkit": True, "langs": ["ko-KR", "en-US"], "os": "Linux test"}); sys.exit()
 items = json.load(open(sys.argv[2]))
+if mode == "merge":
+    out = sys.argv[3]
+    r = subprocess.run(["pdfunite", *items, out], capture_output=True, text=True)
+    emit({"path": out, "ok": r.returncode == 0, "pages": pages_of(out) if r.returncode == 0 else 0, "error": r.stderr}); sys.exit()
 maxp = int(sys.argv[3]) if len(sys.argv) > 3 else 60
 delay = float(os.environ.get("FAKEHELPER_DELAY", "0"))
 for p in items:
