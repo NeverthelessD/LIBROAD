@@ -7,6 +7,7 @@
 | **찾기** | 파일 이름 · 문서 안의 글자 · 초성(ㅅㅇㄱㅎ) · 스캔 문서와 사진 속 글자(OCR)까지. 서재 전체 또는 폴더 하나만. 종류 · 기간 · 크기로 거르기, 검색 저장, 미리 보기 |
 | **분류하기** | 종류별 · 종류+연도 · 날짜별 · 나만의 규칙으로 폴더에 나눠 담기, 다운로드 폴더 자동 정리 |
 | **정리하기** | 똑같은 문서(내용 비교) · 버전 정리(최종 · 최종2 · 수정본…) · 큰 파일 · 오래된 문서 · 빈 폴더 |
+| **PDF로 바꾸기** | 한글(hwp · hwpx) · 워드 · 엑셀 · 파워포인트 · 텍스트 · 사진 · Pages/Keynote/Numbers를 PDF로. 여러 개를 한 번에, 또는 하나의 PDF로 합치기 |
 | **바구니** | 여러 번 찾아 고른 문서를 모아 두고 한꺼번에 옮기기 · 복사 · 이름 바꾸기 · 분류 · 휴지통 |
 | **작업 기록** | 한 일을 모두 적어 두고 되돌리기 |
 
@@ -32,6 +33,7 @@
 
 - [ledongthuc/pdf](https://github.com/ledongthuc/pdf) (BSD) — PDF 글자 읽기 (맥에서는 PDFKit으로 한 번 더)
 - [golang.org/x/text](https://pkg.go.dev/golang.org/x/text) (BSD) — 예전 한국어 텍스트(CP949) · 한글 자모 합치기
+- PDF로 바꾸기에 쓰는 도구 (처음 쓸 때 앱 안에서 받아요, 약 400MB): [LibreOffice](https://www.libreoffice.org) (MPL), [Eclipse Temurin](https://adoptium.net) Java (GPLv2+CE), [H2Orestart](https://github.com/ebandal/H2Orestart) (GPLv3, 한글 문서 읽기)
 - 글꼴: [Pretendard](https://github.com/orioncactus/pretendard), [DM Serif Display](https://fonts.google.com/specimen/DM+Serif+Display) (SIL OFL)
 
 ## 폴더 구조
