@@ -52,6 +52,9 @@ for p in items:
             while os.path.exists(dst):
                 b, e = os.path.splitext(os.path.basename(p)); dst = os.path.join(trash, f"{b} {n}{e}"); n += 1
             shutil.move(p, dst)
-            emit({"path": p, "ok": True, "trashed": dst})
+            if os.environ.get("FAKE_TRASH_LIE"):  # 실제로는 옮겼는데 실패라고 알리는 경우 시험
+                emit({"path": p, "ok": False, "error": "TypeError: Ref"})
+            else:
+                emit({"path": p, "ok": True, "trashed": dst})
     except Exception as e:
         emit({"path": p, "ok": False, "error": str(e)})

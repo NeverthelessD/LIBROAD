@@ -23,8 +23,8 @@ type cleanupReq struct {
 	Kind  string   `json:"kind"` // dupes | versions | big | old | empty
 	Scope string   `json:"scope"`
 	Exts  []string `json:"exts"` // 찾을 확장자 (비우면 모두)
-	MinMB int    `json:"minMB"`
-	Years int    `json:"years"`
+	MinMB int      `json:"minMB"`
+	Years int      `json:"years"`
 }
 
 func (a *App) handleCleanupStart(w http.ResponseWriter, r *http.Request) {
