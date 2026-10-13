@@ -40,6 +40,8 @@
 	<string>외장 디스크에 있는 문서를 찾고 정리하려고 해요.</string>
 	<key>NSNetworkVolumesUsageDescription</key>
 	<string>네트워크 드라이브에 있는 문서를 찾고 정리하려고 해요.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Pages · Keynote · Numbers 문서를 PDF로 바꿀 때 그 앱에 내보내기를 부탁해요.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>made by. Nevertheless_D</string>
 </dict>

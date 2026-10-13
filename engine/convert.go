@@ -86,6 +86,14 @@ func (t *ConvTools) javaHome() string {
 
 func (t *ConvTools) env() []string {
 	env := os.Environ()
+	if os.Getenv("LANG") == "" && os.Getenv("LC_ALL") == "" {
+		// 한글 파일 이름이 깨지지 않도록 UTF-8로
+		if runtime.GOOS == "darwin" {
+			env = append(env, "LANG=en_US.UTF-8")
+		} else {
+			env = append(env, "LANG=C.UTF-8")
+		}
+	}
 	if j := t.javaHome(); j != "" {
 		env = append(env, "JAVA_HOME="+j)
 	}
@@ -405,6 +413,16 @@ func (t *ConvTools) install(job *Job) error {
 	} else {
 		ready.H2O = "ok"
 	}
+	// 처음 한 번 켜서 준비를 끝내 둬요 (그래야 첫 변환부터 한글 확장이 잡혀요)
+	job.SetMsg("변환 도구를 준비하는 중…")
+	t.loMu.Lock()
+	ctx3, cancel3 := context.WithTimeout(context.Background(), 3*time.Minute)
+	warm := exec.CommandContext(ctx3, t.soffice(), "-env:UserInstallation="+t.profileURL(), "--headless", "--norestore", "--nologo", "--nodefault", "--terminate_after_init")
+	warm.Env = t.env()
+	setProcessGroup(warm)
+	warm.Run()
+	cancel3()
+	t.loMu.Unlock()
 	ready.Time = time.Now().Unix()
 	b, _ := json.Marshal(ready)
 	writeFileAtomic(t.readyPath(), b, 0o644)
@@ -800,9 +818,19 @@ func (t *ConvTools) officeToPDF(src, outDir string) (string, error) {
 		}
 		return nil
 	}
+	out := filepath.Join(outDir, stem+".pdf")
 	err := try(infilter)
-	if err != nil && (ext == "hwp" || ext == "hwpx") {
-		err = try("Hwp2002_Reader")
+	if ext == "hwp" || ext == "hwpx" {
+		// 한글 확장이 제때 잡히지 않으면 LibreOffice가 한글 파일을 그냥 글자로 읽어서
+		// 알아볼 수 없는 PDF가 나와요. 결과를 확인하고 한 번 더 해 봐요.
+		if err == nil && !pdfLooksFine(out) {
+			os.Remove(out)
+			err = try(infilter)
+			if err == nil && !pdfLooksFine(out) {
+				os.Remove(out)
+				err = errors.New("bad")
+			}
+		}
 		if err != nil {
 			if r, _ := t.ready(); r.H2O == "" {
 				err = errors.New("한글 문서 확장이 없어서 바꾸지 못했어요")
@@ -814,7 +842,20 @@ func (t *ConvTools) officeToPDF(src, outDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(outDir, stem+".pdf"), nil
+	return out, nil
+}
+
+// pdfLooksFine checks that a converted PDF holds readable text (or almost none, e.g. only pictures).
+func pdfLooksFine(p string) bool {
+	res, err := extractPDF(p)
+	if err != nil {
+		return false
+	}
+	t := res.Text
+	if len([]rune(t)) < 200 {
+		return true
+	}
+	return textLooksRight(t)
 }
 
 // iworkExport asks Pages · Keynote · Numbers to export (in, out) pairs; one error per pair.

@@ -250,7 +250,7 @@ function toolsBannerHTML(t, need) {
   }
   return `<div class="tools-banner"><span style="font-size:28px">🧰</span><div class="tb"><b>한글 · 워드 · 엑셀 · 파워포인트는 ‘변환 도구’가 있어야 바꿀 수 있어요</b>
     무료 문서 프로그램(LibreOffice)과 한글 문서 확장을 이 Mac에 한 번만 받아 둬요. 약 400MB · 몇 분 걸려요. 문서는 밖으로 보내지 않아요.
-    ${t.err ? `<br><span style="color:var(--err)">⚠️ ${esc(t.err)}</span>` : ''}</div><button class="btn brass" id="cvInstall">⬇︎ 받기</button></div>`;
+    ${t.err ? `<br><span style="color:var(--err)">⚠️ ${esc(t.err)}</span>` : ''}</div><button class="btn brass" id="cvDlgInstall">⬇︎ 받기</button></div>`;
 }
 async function installTools() {
   try { await api('/api/convert/install', {}); toast('🧰 변환 도구를 받기 시작했어요. 아래 진행 막대에서 남은 시간을 볼 수 있어요'); poll(); }
@@ -267,7 +267,7 @@ async function convertDialog(paths) {
   const usable = (i) => i.method !== 'none' && !(i.need && !chk.tools.installed) && (i.method !== 'pdf' || o.merge);
   const paintBanner = () => {
     $('#cvBanner', body).innerHTML = toolsBannerHTML(chk.tools, chk.needTools);
-    const b = $('#cvInstall', body); if (b) b.onclick = async () => { await installTools(); refresh(); };
+    const b = $("#cvDlgInstall", body); if (b) b.onclick = async () => { await installTools(); refresh(); };
   };
   const paintList = () => {
     const byPath = Object.fromEntries(chk.items.map((i) => [i.path, i]));
