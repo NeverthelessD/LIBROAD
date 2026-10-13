@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIBROAD</title>
+<link rel="icon" href="/icon.png">
+<link rel="stylesheet" href="/css/app.css">
+<script>
+  // 화면 모드를 먼저 적용해서 깜빡임을 막아요
+  try { const t = localStorage.getItem('libroad-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <img src="/icon.png" alt="" class="brand-logo">
+    <div>
+      <div class="brand-name">LIB<span>ROAD</span></div>
+      <div class="brand-sub">내 문서 도서관</div>
+    </div>
+  </div>
+  <button class="top-live" id="topLive" hidden title="진행 중인 작업 보기"><span class="live-dot"></span><span id="topLiveText"></span></button>
+  <div class="top-actions">
+    <button class="ver-badge" id="verBadge" title="버전 · 업데이트"><span class="ver-dot"></span><span id="verText">v</span></button>
+    <div class="theme-toggle" id="themeToggle">
+      <button data-theme="system" title="시스템 설정 따르기"><svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.8a6.2 6.2 0 0 1 0 12.4z" fill="currentColor"/></svg></button>
+      <button data-theme="light" title="라이트 모드"><svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1v1.8M8 13.2V15M1 8h1.8M13.2 8H15M3.05 3.05l1.27 1.27M11.68 11.68l1.27 1.27M3.05 12.95l1.27-1.27M11.68 4.32l1.27-1.27"/></g></svg></button>
+      <button data-theme="dark" title="다크 모드"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M13.6 10.4A6 6 0 0 1 5.6 2.4a6 6 0 1 0 8 8z" fill="currentColor"/></svg></button>
+    </div>
+    <button class="icon-btn" id="settingsBtn" title="설정 (⌘,)"><svg viewBox="0 0 16 16" width="15" height="15"><path fill="currentColor" d="M9.4 1l.35 1.7a5.6 5.6 0 0 1 1.3.75l1.65-.55 1.4 2.4-1.3 1.15a5.7 5.7 0 0 1 0 1.5l1.3 1.15-1.4 2.4-1.65-.55a5.6 5.6 0 0 1-1.3.75L9.4 15H6.6l-.35-1.7a5.6 5.6 0 0 1-1.3-.75l-1.65.55-1.4-2.4 1.3-1.15a5.7 5.7 0 0 1 0-1.5L1.9 6.9l1.4-2.4 1.65.55a5.6 5.6 0 0 1 1.3-.75L6.6 1zM8 5.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"/></svg></button>
+    <button class="icon-btn" id="quitBtn" title="LIBROAD 종료"><svg viewBox="0 0 16 16" width="15" height="15"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 1.8v6"/><path d="M4.6 4a5.2 5.2 0 1 0 6.8 0"/></g></svg></button>
+  </div>
+</header>
+
+<div class="shell">
+  <!-- ───────── 왼쪽: 메뉴 · 내 서재 ───────── -->
+  <nav class="side" id="side">
+    <div class="nav" id="nav">
+      <button data-view="search" class="on"><span class="ni" data-art="nav-search"></span><span class="nt">찾기<small>검색 · 미리 보기</small></span><kbd>⌘1</kbd></button>
+      <button data-view="organize"><span class="ni" data-art="nav-organize"></span><span class="nt">분류하기<small>규칙 · 자동 정리</small></span><kbd>⌘2</kbd></button>
+      <button data-view="cleanup"><span class="ni" data-art="nav-cleanup"></span><span class="nt">정리하기<small>중복 · 버전 · 빈 폴더</small></span><kbd>⌘3</kbd></button>
+      <button data-view="basket"><span class="ni" data-art="nav-basket"></span><span class="nt">바구니<small>모아서 한꺼번에</small></span><b class="count" id="basketCount" hidden>0</b></button>
+      <button data-view="history"><span class="ni" data-art="nav-history"></span><span class="nt">작업 기록<small>되돌리기</small></span></button>
+    </div>
+
+    <div class="side-sec">
+      <div class="side-cap"><span>내 서재</span><button class="link sm" id="addRootBtn" title="서재에 폴더 넣기">＋ 폴더</button></div>
+      <div class="roots" id="roots"></div>
+    </div>
+
+    <div class="side-card" id="libCard">
+      <div class="lc-top"><span class="lc-art" data-art="catalog"></span><div><b id="libCount">—</b><small id="libSub">서재를 살피는 중…</small></div></div>
+      <div class="lc-spines" id="libSpines"></div>
+      <div class="lc-note" id="libNote"></div>
+    </div>
+  </nav>
+
+  <!-- ───────── 가운데 ───────── -->
+  <main class="main" id="main">
+
+    <!-- ═══ 찾기 ═══ -->
+    <section class="view" id="view-search">
+      <div class="search-head" id="searchHead">
+        <div class="hero" id="hero">
+          <div class="hero-text">
+            <div class="eyebrow">📚 내 문서 도서관</div>
+            <h1>어떤 문서를<br><em>찾고</em> 계세요?</h1>
+            <p class="lead">파일 이름 · 문서 안의 글자 · 초성(ㅅㅇㄱㅎ) · 스캔 문서의 글자까지 찾아요.</p>
+          </div>
+          <div class="hero-art" data-art="hero"></div>
+        </div>
+
+        <div class="searchbar" id="searchbar">
+          <div class="scope" id="scopeBtn" role="button" tabindex="0" title="찾을 곳">
+            <span class="scope-ico">📚</span><span class="scope-name" id="scopeName">서재 전체</span><span class="caret">▾</span>
+          </div>
+          <div class="qbox">
+            <svg class="q-ico" viewBox="0 0 24 24" width="19" height="19"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: 사업계획서   ·   &quot;임대차 계약&quot;   ·   ㅅㅇㄱㅎㅅ   ·   보고서 -초안">
+            <button class="q-clear" id="qClear" title="지우기" hidden>✕</button>
+          </div>
+          <button class="tog on" id="togBody" title="문서 안의 글자까지 찾기"><span class="tdot"></span>본문</button>
+          <button class="tog on" id="togOcr" title="스캔 문서 · 사진의 글자(OCR)도 찾기. 끄면 더 빨라요."><span class="tdot"></span>OCR</button>
+          <button class="btn primary" id="goBtn">찾기</button>
+        </div>
+
+        <div class="filters" id="filters">
+          <div class="chips" id="kindChips"></div>
+          <span class="sp"></span>
+          <label class="sel"><span>기간</span>
+            <select id="fPeriod">
+              <option value="">전체</option><option value="today">오늘</option><option value="week">최근 7일</option><option value="month">최근 한 달</option>
+              <option value="year">최근 1년</option><option value="old1">1년 넘은</option><option value="old3">3년 넘은</option><option value="custom">직접 고르기…</option>
+            </select></label>
+          <label class="sel"><span>크기</span>
+            <select id="fSize"><option value="">전체</option><option value="s">1MB 미만</option><option value="m">1~10MB</option><option value="l">10~100MB</option><option value="xl">100MB 이상</option></select></label>
+          <label class="sel"><span>정렬</span>
+            <select id="fSort"><option value="">알아서</option><option value="rel">관련도</option><option value="new">최근 수정</option><option value="old">오래된</option><option value="name">이름</option><option value="size">큰 파일</option></select></label>
+        </div>
+        <div class="custom-range" id="customRange" hidden>
+          <input type="date" id="fFrom"> <span>~</span> <input type="date" id="fTo">
+        </div>
+        <div class="saved" id="savedRow" hidden></div>
+      </div>
+
+      <!-- 검색 전: 서가 둘러보기 -->
+      <div class="browse" id="browse">
+        <div class="shelf-sec">
+          <div class="sec-title"><span>🕰️ 최근에 고친 문서</span><span class="sp"></span><button class="link" id="seeAllRecent">모두 보기 →</button></div>
+          <div class="shelf" id="recentShelf"></div>
+        </div>
+        <div class="browse-grid">
+          <div class="shelf-sec">
+            <div class="sec-title"><span>🗂️ 서가 안내</span><small>종류를 누르면 그 서가만 보여요</small></div>
+            <div class="guide" id="kindGuide"></div>
+          </div>
+          <div class="shelf-sec">
+            <div class="sec-title"><span>🆕 새로 들어온 문서</span></div>
+            <div class="mini-list" id="addedList"></div>
+          </div>
+        </div>
+        <div class="tips">
+          <div class="tip"><b>"따옴표"</b><span>붙어 있는 말 그대로 찾기</span></div>
+          <div class="tip"><b>-빼기</b><span>그 말이 들어간 문서는 빼기</span></div>
+          <div class="tip"><b>ㅅㅇㄱㅎ</b><span>초성으로 파일 이름 찾기</span></div>
+          <div class="tip"><b>Space</b><span>고른 문서를 훑어보기</span></div>
+        </div>
+      </div>
+
+      <!-- 검색 결과 -->
+      <div class="results" id="results" hidden>
+        <div class="res-head">
+          <label class="ck" title="모두 선택"><input type="checkbox" id="selAll"><span></span></label>
+          <div class="res-count" id="resCount"></div>
+          <span class="sp"></span>
+          <button class="link" id="saveSearch">☆ 이 검색 저장</button>
+          <div class="seg sm" id="viewMode"><button data-v="list" class="on" title="목록">☰</button><button data-v="grid" title="책장 보기">▦</button></div>
+        </div>
+        <div class="res-note" id="resNote" hidden></div>
+        <div class="res-list" id="resList"></div>
+        <button class="btn ghost more" id="moreBtn" hidden>더 보기</button>
+        <div class="empty" id="resEmpty" hidden><div data-art="empty"></div><p>찾는 문서가 서가에 없어요</p><small id="resEmptyTip">다른 낱말이나 초성으로 찾아보세요</small></div>
+      </div>
+    </section>
+
+    <!-- ═══ 분류하기 ═══ -->
+    <section class="view" id="view-organize" hidden></section>
+    <!-- ═══ 정리하기 ═══ -->
+    <section class="view" id="view-cleanup" hidden></section>
+    <!-- ═══ 바구니 ═══ -->
+    <section class="view" id="view-basket" hidden></section>
+    <!-- ═══ 작업 기록 ═══ -->
+    <section class="view" id="view-history" hidden></section>
+
+    <!-- 고른 문서로 할 일 -->
+    <div class="selbar" id="selbar" hidden>
+      <span class="sel-n" id="selN"></span>
+      <button data-act="basket" title="바구니에 담기">🧺 <span class="t">바구니에 담기</span></button>
+      <button data-act="move" title="옮기기">📂 <span class="t">옮기기</span></button>
+      <button data-act="copy" title="복사">📑 <span class="t">복사</span></button>
+      <button data-act="rename" title="이름 바꾸기">✏️ <span class="t">이름 바꾸기</span></button>
+      <button data-act="organize" title="분류">🗂️ <span class="t">분류</span></button>
+      <button data-act="trash" class="danger" title="휴지통">🗑️ <span class="t">휴지통</span></button>
+      <button data-act="clear" class="x" title="선택 해제 (Esc)">✕</button>
+    </div>
+  </main>
+
+  <!-- ───────── 오른쪽: 미리 보기 ───────── -->
+  <aside class="preview" id="preview" hidden></aside>
+</div>
+
+<!-- 진행 중인 작업 -->
+<div class="jobs" id="jobs" hidden></div>
+
+<footer class="foot">
+  <span>🔒 모든 작업은 이 Mac 안에서만 해요. 문서 내용은 어디에도 보내지 않아요.</span>
+  <span class="sp"></span>
+  <span class="made">made by. Nevertheless_D</span>
+</footer>
+
+<!-- 창 (모달) -->
+<div class="modal-back" id="modal" hidden>
+  <div class="modal" id="modalBox">
+    <div class="modal-head"><div><div class="modal-title" id="modalTitle"></div><div class="modal-sub" id="modalSub"></div></div><button class="icon-btn" id="modalClose" title="닫기 (Esc)">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+<div class="menu" id="menu" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="/js/art.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/ops.js"></script>
+<script src="/js/views.js"></script>
+<script src="/js/panels.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ko</string>
+	<key>CFBundleName</key>
+	<string>LIBROAD</string>
+	<key>CFBundleDisplayName</key>
+	<string>LIBROAD</string>
+	<key>CFBundleExecutable</key>
+	<string>LIBROAD</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.nevertheless-d.libroad</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>__VERSION__</string>
+	<key>CFBundleVersion</key>
+	<string>__VERSION__</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>문서 폴더의 문서를 찾고 정리하려고 해요. 문서 내용은 이 Mac 밖으로 보내지 않아요.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>바탕 화면의 문서를 찾고 정리하려고 해요. 문서 내용은 이 Mac 밖으로 보내지 않아요.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>다운로드 폴더의 문서를 찾고 정리하려고 해요. 문서 내용은 이 Mac 밖으로 보내지 않아요.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>외장 디스크에 있는 문서를 찾고 정리하려고 해요.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>네트워크 드라이브에 있는 문서를 찾고 정리하려고 해요.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>made by. Nevertheless_D</string>
+</dict>
+</plist>
