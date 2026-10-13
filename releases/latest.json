@@ -1,11 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "date": "2026-10-13",
-  "zip": "LIBROAD-1.0.0.zip",
-  "sha256": "f896a665903fbe038087e6d7ba58d6fc1d8f35d9f1cf7fdda9619ccb06bb0298",
-  "size": 11568090,
+  "zip": "LIBROAD-1.1.0.zip",
+  "sha256": "ba7ecbc484f7f9fa7515a2791a757fa0d64fca0222c1e633f2fcbbf3a2513939",
+  "size": 11652393,
   "notes": [
-    "LIBROAD 첫 버전이에요",
-    "문서 찾기 · 분류 · 옮기기 · 정리 · OCR"
+    "PDF로 바꾸기: 한글(hwp · hwpx) · 워드 · 엑셀 · 파워포인트 · 텍스트 · 사진을 PDF로",
+    "여러 문서를 하나의 PDF로 합치기",
+    "한글 · 오피스 문서는 처음 한 번 변환 도구를 받아요 (약 400MB)"
   ]
 }

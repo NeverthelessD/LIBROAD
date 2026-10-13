@@ -6,8 +6,10 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 1320, 'height': 860}, color_scheme='light', device_scale_factor=2)
     pg.goto("http://127.0.0.1:18990/?t=t"); time.sleep(4)
     pg.fill('#q', '보고서'); time.sleep(1.2)
+    pg.wait_for_timeout(500)
     pg.click('#resList .row >> nth=0'); time.sleep(0.4)
     pg.click('#resList .row >> nth=1', modifiers=['Meta']); time.sleep(1.2)
+    pg.evaluate("""fetch('/api/convert/run',{method:'POST',headers:{'x-token':'t'},body:JSON.stringify({paths:['/tmp/cv/home/Documents/회사/보도자료_누리호.hwp','/tmp/cv/home/Documents/개인/리포트 양식.hwp','/tmp/cv/home/Documents/회사/분기실적발표.pptx','/tmp/cv/home/Documents/회사/예산표.xlsx'],dest:'/tmp/cv/out2'})})"""); time.sleep(4.5)
     def box(name, sel):
         bb = pg.locator(sel).first.bounding_box()
         boxes[name] = bb
@@ -16,7 +18,14 @@ with sync_playwright() as p:
         try: box(n, s)
         except Exception as e: print('nobox', n, e)
     pg.screenshot(path='/tmp/guide/main.png')
+    boxes['navconv'] = pg.locator('#nav [data-view=convert]').bounding_box()
     json.dump(boxes, open('/tmp/guide/boxes.json', 'w'))
+    # PDF로 바꾸기
+    H = '/tmp/cv/home/Documents'
+    pg.evaluate(f"""convertDialog(['{H}/회사/보도자료_누리호.hwp', '{H}/개인/리포트 양식.hwp', '{H}/회사/분기실적발표.pptx', '{H}/회사/예산표.xlsx', '/tmp/cv/home/Desktop/영수증사진.jpg'])"""); time.sleep(1.5)
+    pg.click('#cvOpts .switch-row'); time.sleep(0.6)
+    pg.locator('#modalBox').screenshot(path='/tmp/guide/convert.png')
+    pg.keyboard.press('Escape'); time.sleep(0.4)
     # 옮기기 미리 보기
     pg.click('#selbar [data-act=move]'); time.sleep(0.6); pg.click('.chip[data-p] >> nth=0'); time.sleep(1)
     pg.locator('#modalBox').screenshot(path='/tmp/guide/move.png')
