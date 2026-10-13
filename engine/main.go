@@ -227,7 +227,7 @@ func (a *App) fixSettings() {
 	if s.Roots == nil {
 		s.Roots = []string{}
 	}
-	s.Roots = cleanRoots(s.Roots)
+	s.Roots = dedupeRoots(s.Roots)
 	if s.Rules == nil {
 		s.Rules = []Rule{}
 	}
@@ -240,8 +240,8 @@ func (a *App) fixSettings() {
 	fixAuto(&s.Auto)
 }
 
-// cleanRoots removes duplicates and folders inside other folders of the list.
-func cleanRoots(in []string) []string {
+// dedupeRoots removes empty and duplicate folders (안쪽 폴더도 서재에 따로 둘 수 있어요).
+func dedupeRoots(in []string) []string {
 	seen := map[string]bool{}
 	list := []string{}
 	for _, r := range in {
@@ -252,6 +252,12 @@ func cleanRoots(in []string) []string {
 		seen[r] = true
 		list = append(list, r)
 	}
+	return list
+}
+
+// topRoots keeps only folders that are not inside another folder of the list (살필 때 두 번 훑지 않도록).
+func topRoots(in []string) []string {
+	list := dedupeRoots(in)
 	out := []string{}
 	for _, r := range list {
 		inside := false
@@ -583,6 +589,12 @@ func (a *App) handleRoots(w http.ResponseWriter, r *http.Request) {
 		if p == "/" || p == a.home {
 			jsonError(w, 400, "컴퓨터 전체나 홈 폴더 전체는 너무 넓어요. 그 안의 폴더를 골라 주세요")
 			return
+		}
+		for _, x := range a.Settings().Roots {
+			if x == p {
+				jsonError(w, 400, "이미 서재에 있는 폴더예요")
+				return
+			}
 		}
 		a.update(func(s *Settings) { s.Roots = append(s.Roots, p) })
 	case "remove":

@@ -141,7 +141,17 @@ function closeModal() {
   if (!M.open) return;
   M.open = false; $('#modal').hidden = true;
   const cb = M.onClose; M.onClose = null; cb && cb();
+  // 창이 열려 있는 동안 서재가 바뀌었으면 (지운 · 옮긴 파일 등) 결과를 새로 고쳐요
+  if (S.needRefresh && !M.open) { S.needRefresh = false; if (S.view === 'search' && S.res) runSearch({ keepSel: true }); }
 }
+// 다른 앱(Finder 등)에서 파일을 옮기거나 지우고 돌아오면 서재를 바로 다시 살펴요
+let lastFocusScan = 0;
+window.addEventListener('focus', () => {
+  if (Date.now() - lastFocusScan < 20000) return;
+  lastFocusScan = Date.now();
+  api('/api/library/rescan', {}).catch(() => {});
+  if (S.view === 'search' && S.res && !M.open) setTimeout(() => runSearch({ keepSel: true }), 300);
+});
 $('#modalClose').onclick = closeModal;
 $('#modal').addEventListener('mousedown', (e) => { if (e.target.id === 'modal') closeModal(); });
 
@@ -698,7 +708,8 @@ async function poll() {
       S.libVer = p.lib.ver;
       clearTimeout(verTimer);
       verTimer = setTimeout(() => {
-        if (S.view === 'search' && S.res && !M.open) runSearch({ keepSel: true });
+        if (S.view === 'search' && S.res && M.open) S.needRefresh = true;
+        else if (S.view === 'search' && S.res) runSearch({ keepSel: true });
         else if (S.view === 'search' && !S.res) { renderChips(); renderBrowse(true); }
       }, firstLib ? 0 : 1500);
     }

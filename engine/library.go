@@ -259,6 +259,10 @@ func (l *Library) Get(p string) *Doc {
 func (l *Library) Info(p string) (DocInfo, bool) {
 	roots := app.Settings().Roots
 	if d := l.Get(p); d != nil {
+		if _, err := os.Lstat(p); err != nil {
+			l.Removed(p) // 이미 지우거나 옮긴 파일
+			return DocInfo{}, false
+		}
 		return l.info(d, roots), true
 	}
 	// 서재 밖의 파일 (바구니에 직접 넣은 파일 등)
@@ -310,12 +314,22 @@ func (l *Library) Status() map[string]any {
 		case StFail:
 			pend["fail"]++
 		}
-		perRoot[rootOf(d.Path, s.Roots)]++
+		for _, r := range s.Roots {
+			if isUnder(d.Path, r) {
+				perRoot[r]++
+			}
+		}
 	}
 	l.st.Lock()
 	roots := []rootStat{}
 	for _, r := range s.Roots {
-		roots = append(roots, rootStat{Path: r, Name: nfc(filepath.Base(r)), Count: perRoot[r], Err: l.st.rootErr[r]})
+		e := l.st.rootErr[r]
+		for top, msg := range l.st.rootErr {
+			if e == "" && msg != "" && isUnder(r, top) {
+				e = msg
+			}
+		}
+		roots = append(roots, rootStat{Path: r, Name: nfc(filepath.Base(r)), Count: perRoot[r], Err: e})
 	}
 	out := map[string]any{
 		"docs": len(docs), "bytes": bytes, "byKind": byKind, "pending": pend, "roots": roots,
@@ -369,6 +383,11 @@ func (l *Library) walkRoots(roots []string, onCount func(int)) (map[string]found
 	errs := map[string]string{}
 	fakeCloud := os.Getenv("LIBROAD_FAKE_DATALESS") != ""
 	supportDir := l.support
+	// 서재 안쪽 폴더를 따로 넣었으면 그 폴더는 따로 훑어요 (두 번 훑지 않게, 숨김 폴더라도 빠지지 않게)
+	isRoot := map[string]bool{}
+	for _, r := range roots {
+		isRoot[r] = true
+	}
 	for _, root := range roots {
 		st, err := os.Stat(root)
 		if err != nil || !st.IsDir() {
@@ -391,7 +410,7 @@ func (l *Library) walkRoots(roots []string, onCount func(int)) (map[string]found
 				if p == root {
 					return nil
 				}
-				if p == supportDir {
+				if p == supportDir || isRoot[p] {
 					return fs.SkipDir
 				}
 				ext := extOf(name)
@@ -473,7 +492,7 @@ func (l *Library) scanOnce() {
 	start := time.Now()
 	var walkJob *Job
 	firstScan := len(l.Docs()) == 0
-	files, errs := l.walkRoots(s.Roots, func(n int) {
+	files, errs := l.walkRoots(dedupeRoots(s.Roots), func(n int) {
 		l.st.Lock()
 		l.st.found = n
 		l.st.Unlock()

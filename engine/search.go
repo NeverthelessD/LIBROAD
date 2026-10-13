@@ -226,7 +226,7 @@ func (l *Library) Search(req SearchReq) map[string]any {
 		for _, h := range hits {
 			seen[h.Path] = true
 		}
-		searchRoots := roots
+		searchRoots := topRoots(roots)
 		if scope != "" {
 			searchRoots = []string{scope}
 		}
@@ -271,10 +271,20 @@ func (l *Library) Search(req SearchReq) map[string]any {
 	default:
 		sort.SliceStable(hits, func(i, j int) bool { return hits[i].Mod > hits[j].Mod })
 	}
-	total := len(hits)
-	start := min(req.Offset, total)
-	end := min(start+req.Limit, total)
-	page := hits[start:end]
+	// 보여 줄 문서가 아직 그 자리에 있는지 확인해요 (Finder에서 지우거나 옮긴 파일은 바로 빼요)
+	start := min(req.Offset, len(hits))
+	page := []*Hit{}
+	gone := 0
+	for i := start; i < len(hits) && len(page) < req.Limit; i++ {
+		h := hits[i]
+		if _, err := os.Lstat(h.Path); err != nil {
+			l.Removed(h.Path)
+			gone++
+			continue
+		}
+		page = append(page, h)
+	}
+	total := len(hits) - gone
 
 	// 눈에 보이는 결과만 본문 미리 보기(스니펫)를 만들어요
 	if hasInclude {
@@ -290,6 +300,7 @@ func (l *Library) Search(req SearchReq) map[string]any {
 	for _, h := range hits {
 		totalSize += h.Size
 	}
+
 	return map[string]any{
 		"ok": true, "total": total, "items": page, "offset": start, "kindCount": kindCount, "totalSize": totalSize,
 		"terms": termsOut(terms), "pending": pending, "spot": spot, "ver": l.ver.Load(),
@@ -525,6 +536,7 @@ func (a *App) handleDoc(w http.ResponseWriter, r *http.Request) {
 	readJSON(r, &in)
 	info, ok := a.lib.Info(in.Path)
 	if !ok {
+		a.lib.Removed(in.Path)
 		jsonError(w, 404, "파일을 찾을 수 없어요. 옮기거나 지웠을 수 있어요")
 		return
 	}

@@ -138,12 +138,10 @@ function pdfText(p) {
 
 // ───────────────────────── 휴지통
 function trash(p) {
+  // 휴지통 안의 새 위치는 LIBROAD 엔진이 크기 · 시간으로 찾아요 (되돌리기용)
   var fm = $.NSFileManager.defaultManager;
-  var ref = Ref();
-  var ok = fm.trashItemAtURLResultingItemURLError(fileURL(p), ref, null);
-  var where = '';
-  try { where = str(ref[0].path); } catch (e) {}
-  return { ok: !!ok, trashed: where };
+  var ok = fm.trashItemAtURLResultingItemURLError(fileURL(p), null, null);
+  return { ok: !!ok, trashed: '' };
 }
 
 function run(argv) {

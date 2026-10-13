@@ -20,8 +20,9 @@ import (
 // 찾기만 해요. 지우기 · 옮기기는 사용자가 고른 뒤 미리 보기를 거쳐 휴지통으로.
 
 type cleanupReq struct {
-	Kind  string `json:"kind"` // dupes | versions | big | old | empty
-	Scope string `json:"scope"`
+	Kind  string   `json:"kind"` // dupes | versions | big | old | empty
+	Scope string   `json:"scope"`
+	Exts  []string `json:"exts"` // 찾을 확장자 (비우면 모두)
 	MinMB int    `json:"minMB"`
 	Years int    `json:"years"`
 }
@@ -47,10 +48,20 @@ func (a *App) handleCleanupStart(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{"ok": true, "job": job.ID()})
 }
 
-func (a *App) scopedDocs(scope string) []*Doc {
+func (a *App) scopedDocs(scope string, exts []string) []*Doc {
 	roots := a.Settings().Roots
+	extSet := map[string]bool{}
+	for _, e := range exts {
+		extSet[strings.ToLower(strings.TrimPrefix(e, "."))] = true
+		if e == "jpg" {
+			extSet["jpeg"] = true
+		}
+	}
 	out := []*Doc{}
 	for _, d := range a.lib.Docs() {
+		if len(extSet) > 0 && !extSet[d.Ext] {
+			continue
+		}
 		if scope != "" {
 			if !isUnder(d.Path, scope) {
 				continue
@@ -68,14 +79,14 @@ func runCleanup(in cleanupReq, job *Job) (any, error) {
 	info := func(d *Doc) DocInfo { return app.lib.info(d, roots) }
 	switch in.Kind {
 	case "dupes":
-		return findDupes(app.scopedDocs(in.Scope), job, info)
+		return findDupes(app.scopedDocs(in.Scope, in.Exts), job, info)
 	case "versions":
-		return findVersions(app.scopedDocs(in.Scope), info), nil
+		return findVersions(app.scopedDocs(in.Scope, in.Exts), info), nil
 	case "big":
 		min := int64(max(1, in.MinMB)) << 20
 		files := []DocInfo{}
 		var total int64
-		for _, d := range app.scopedDocs(in.Scope) {
+		for _, d := range app.scopedDocs(in.Scope, in.Exts) {
 			if d.Size >= min {
 				files = append(files, info(d))
 				total += d.Size
@@ -87,7 +98,7 @@ func runCleanup(in cleanupReq, job *Job) (any, error) {
 		cut := time.Now().AddDate(-max(1, in.Years), 0, 0).Unix()
 		files := []DocInfo{}
 		var total int64
-		for _, d := range app.scopedDocs(in.Scope) {
+		for _, d := range app.scopedDocs(in.Scope, in.Exts) {
 			if d.Mod < cut {
 				files = append(files, info(d))
 				total += d.Size

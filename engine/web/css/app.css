@@ -526,3 +526,16 @@ textarea.input { height: auto; padding: 7px 9px; resize: vertical; line-height: 
 .fmt b { display: block; color: var(--ink); font-size: 13px; }
 .dropzone { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px; border: 2px dashed var(--stroke2); border-radius: 16px; background: var(--well); text-align: center; }
 .dropzone .dz-art { width: 150px; height: 112px; }
+
+/* ── 찾을 형식 고르기 (정리하기) ─────────────────────────── */
+.ext-pick { margin: -4px 0 14px; padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--stroke); box-shadow: var(--shadow); }
+.ep-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+.ep-head .link { margin-left: 4px; }
+.ep-groups { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.ep-g { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: 10px; background: var(--well); border: 1px solid var(--stroke); }
+.ep-k { padding: 3px 8px; border-radius: 7px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.ep-k.on { background: var(--c); color: #fff; }
+.ep-k.some { box-shadow: inset 0 0 0 2px var(--c); color: var(--ink); }
+.ep-e { padding: 3px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: var(--faint); }
+.ep-e:hover { background: var(--chip); color: var(--ink); }
+.ep-e.on { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--c); }

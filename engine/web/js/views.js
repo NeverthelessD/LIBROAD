@@ -143,7 +143,34 @@ function editRule(i) {
 }
 
 // ════════════════════════════════════════════════ 정리하기
-const CL = { kind: 'dupes', scope: '', minMB: 50, years: 2, job: '', result: null, sel: new Set(), running: false };
+const CL = { kind: 'dupes', scope: '', minMB: 50, years: 2, job: '', result: null, sel: new Set(), running: false, exts: new Set() };
+try { const e = JSON.parse(localStorage.getItem('libroad-cl-exts') || '[]'); if (Array.isArray(e)) CL.exts = new Set(e); } catch { /* */ }
+function saveClExts() { try { localStorage.setItem('libroad-cl-exts', JSON.stringify([...CL.exts])); } catch { /* */ } }
+// 찾을 형식 고르기 (아무것도 안 고르면 모든 형식)
+function extPickerHTML() {
+  const all = CL.exts.size === 0;
+  return `<div class="ext-pick"><div class="ep-head"><b>찾을 형식</b><span class="note">${all ? '모든 형식에서 찾아요. 원하는 형식만 골라 보세요.' : `고른 ${CL.exts.size}가지 형식에서만 찾아요.`}</span><span class="sp"></span>
+      <button class="link" data-ep="all">모두</button><button class="link" data-ep="docs">사진 빼고</button></div>
+    <div class="ep-groups">${S.kinds.map((k) => {
+      const on = k.exts.filter((e) => CL.exts.has(e)).length;
+      return `<div class="ep-g" style="--c:${k.color}"><button class="ep-k${on === k.exts.length ? ' on' : on ? ' some' : ''}" data-k="${k.id}" title="${esc(k.label)} 모두">${k.emoji} ${esc(k.label)}</button>${k.exts.map((e) => `<button class="ep-e${CL.exts.has(e) ? ' on' : ''}" data-e="${e}">.${e}</button>`).join('')}</div>`;
+    }).join('')}</div></div>`;
+}
+function bindExtPicker(box) {
+  const repaint = () => { box.innerHTML = extPickerHTML(); bindExtPicker(box); saveClExts(); };
+  $$('[data-e]', box).forEach((b) => (b.onclick = () => { const e = b.dataset.e; CL.exts.has(e) ? CL.exts.delete(e) : CL.exts.add(e); repaint(); }));
+  $$('[data-k]', box).forEach((b) => (b.onclick = () => {
+    const k = S.kinds.find((x) => x.id === b.dataset.k);
+    const allOn = k.exts.every((e) => CL.exts.has(e));
+    k.exts.forEach((e) => (allOn ? CL.exts.delete(e) : CL.exts.add(e)));
+    repaint();
+  }));
+  $$('[data-ep]', box).forEach((b) => (b.onclick = () => {
+    CL.exts = new Set();
+    if (b.dataset.ep === 'docs') S.kinds.filter((k) => !k.image).forEach((k) => k.exts.forEach((e) => CL.exts.add(e)));
+    repaint();
+  }));
+}
 const CL_TOOLS = [
   { k: 'dupes', i: '👯', t: '똑같은 문서', d: '내용이 완전히 같은 파일' },
   { k: 'versions', i: '🗂️', t: '버전 정리', d: '최종 · 최종2 · 수정본…' },
@@ -164,6 +191,7 @@ VIEWS.cleanup = () => {
       <span class="sp"></span>
       <button class="btn primary" id="clGo">${CL.running ? '⏳ 찾는 중…' : '🔍 찾기'}</button>
     </div>
+    ${CL.kind !== 'empty' ? '<div id="clExts"></div>' : ''}
     <div id="clRes"></div>`;
   paintArt(el);
   $$('.tool', el).forEach((b) => (b.onclick = () => { if (CL.kind !== b.dataset.k) { CL.kind = b.dataset.k; CL.result = null; CL.sel.clear(); } VIEWS.cleanup(); }));
@@ -172,12 +200,13 @@ VIEWS.cleanup = () => {
   const yr = $('#clYears'); if (yr) yr.onchange = (e) => { CL.years = +e.target.value; };
   $('#clGo').onclick = startCleanup;
   $('#clGo').disabled = CL.running;
+  const ex = $('#clExts'); if (ex) { ex.innerHTML = extPickerHTML(); bindExtPicker(ex); }
   renderCleanup();
 };
 async function startCleanup() {
   CL.result = null; CL.sel.clear(); CL.running = true;
   try {
-    const r = await api('/api/cleanup/start', { kind: CL.kind, scope: CL.scope, minMB: CL.minMB, years: CL.years });
+    const r = await api('/api/cleanup/start', { kind: CL.kind, scope: CL.scope, minMB: CL.minMB, years: CL.years, exts: CL.kind === 'empty' ? [] : [...CL.exts] });
     CL.job = r.job; CL.runKind = CL.kind;
   } catch (e) { CL.running = false; toast('⚠️ ' + e.message); }
   VIEWS.cleanup(); poll();

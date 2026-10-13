@@ -330,7 +330,10 @@ func baseItem(src string) PlanItem {
 	}
 	st, err := os.Lstat(src)
 	if err != nil {
-		it.Skip, it.Note = true, "파일을 찾을 수 없어요"
+		it.Skip, it.Note = true, "파일을 찾을 수 없어요 (이미 옮기거나 지운 파일이라 목록에서 뺐어요)"
+		if app != nil && app.lib != nil {
+			app.lib.Removed(src)
+		}
 		return it
 	}
 	if st.IsDir() {
@@ -531,6 +534,7 @@ func (o *Ops) execute(p *Plan, job *Job) {
 			job.SetMsg(it.Name)
 			if _, err := os.Lstat(it.Src); err != nil {
 				fail(it, errors.New("파일을 찾을 수 없어요"))
+				app.lib.Removed(it.Src)
 				job.Add(1)
 				continue
 			}
@@ -739,6 +743,11 @@ func trashPaths(items []PlanItem, job *Job) map[string]trashRes {
 			continue
 		}
 		if !fileExists(it.Src) {
+			// 도우미가 실패라고 알려도 실제로는 휴지통으로 갔을 수 있어요 → 휴지통에서 찾아봐요
+			if r, ok := out[it.Src]; ok && r.err != nil {
+				out[it.Src] = trashRes{to: findInTrash(it.Src, it)}
+				continue
+			}
 			if _, ok := out[it.Src]; !ok {
 				out[it.Src] = trashRes{err: errors.New("파일을 찾을 수 없어요")}
 				job.Add(1)
