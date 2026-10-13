@@ -40,6 +40,7 @@
       <button data-view="search" class="on"><span class="ni" data-art="nav-search"></span><span class="nt">찾기<small>검색 · 미리 보기</small></span><kbd>⌘1</kbd></button>
       <button data-view="organize"><span class="ni" data-art="nav-organize"></span><span class="nt">분류하기<small>규칙 · 자동 정리</small></span><kbd>⌘2</kbd></button>
       <button data-view="cleanup"><span class="ni" data-art="nav-cleanup"></span><span class="nt">정리하기<small>중복 · 버전 · 빈 폴더</small></span><kbd>⌘3</kbd></button>
+      <button data-view="convert"><span class="ni" data-art="nav-convert"></span><span class="nt">PDF로 바꾸기<small>한글 · 워드 · PPT → PDF</small></span><kbd>⌘4</kbd></button>
       <button data-view="basket"><span class="ni" data-art="nav-basket"></span><span class="nt">바구니<small>모아서 한꺼번에</small></span><b class="count" id="basketCount" hidden>0</b></button>
       <button data-view="history"><span class="ni" data-art="nav-history"></span><span class="nt">작업 기록<small>되돌리기</small></span></button>
     </div>
@@ -148,6 +149,8 @@
     <section class="view" id="view-organize" hidden></section>
     <!-- ═══ 정리하기 ═══ -->
     <section class="view" id="view-cleanup" hidden></section>
+    <!-- ═══ PDF로 바꾸기 ═══ -->
+    <section class="view" id="view-convert" hidden></section>
     <!-- ═══ 바구니 ═══ -->
     <section class="view" id="view-basket" hidden></section>
     <!-- ═══ 작업 기록 ═══ -->
@@ -161,6 +164,7 @@
       <button data-act="copy" title="복사">📑 <span class="t">복사</span></button>
       <button data-act="rename" title="이름 바꾸기">✏️ <span class="t">이름 바꾸기</span></button>
       <button data-act="organize" title="분류">🗂️ <span class="t">분류</span></button>
+      <button data-act="pdf" title="PDF로 바꾸기">📄 <span class="t">PDF로</span></button>
       <button data-act="trash" class="danger" title="휴지통">🗑️ <span class="t">휴지통</span></button>
       <button data-act="clear" class="x" title="선택 해제 (Esc)">✕</button>
     </div>

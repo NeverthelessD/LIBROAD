@@ -500,3 +500,29 @@ textarea.input { height: auto; padding: 7px 9px; resize: vertical; line-height: 
   .nt, .side-sec, .side-card, .nav kbd { display: none; }
   .nav button { justify-content: center; }
 }
+
+/* ── PDF로 바꾸기 ─────────────────────────── */
+.conv-list { border: 1px solid var(--stroke); border-radius: 12px; overflow: hidden; max-height: 300px; overflow-y: auto; }
+.crow { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--stroke); font-size: 12.5px; }
+.crow:first-child { border-top: 0; }
+.crow.off { opacity: .55; }
+.crow .cn b { display: block; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crow .cn small { display: block; font-size: 11.5px; color: var(--muted); }
+.crow .cn small.w { color: var(--warn); }
+.crow .ord { display: flex; flex-direction: column; gap: 1px; }
+.crow .ord button { font-size: 9px; line-height: 1; padding: 2px 4px; border-radius: 4px; color: var(--muted); }
+.crow .ord button:hover { background: var(--chip); color: var(--ink); }
+.via { font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.via.ok { background: var(--green-soft); color: var(--green-ink); }
+.via.need { background: var(--brass-soft); color: var(--brass-ink); }
+.via.no { background: var(--err-soft); color: var(--err); }
+.tools-banner { display: flex; gap: 14px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--brass-soft); color: var(--brass-ink); margin-bottom: 12px; }
+.tools-banner .tb { flex: 1; font-size: 12.5px; line-height: 1.55; }
+.tools-banner .tb b { display: block; font-size: 13.5px; color: var(--ink); }
+.tools-banner .jbar { margin-top: 6px; }
+.conv-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.fmt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fmt { padding: 10px 12px; border-radius: 12px; background: var(--well); border: 1px solid var(--stroke); font-size: 12px; color: var(--muted); }
+.fmt b { display: block; color: var(--ink); font-size: 13px; }
+.dropzone { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px; border: 2px dashed var(--stroke2); border-radius: 16px; background: var(--well); text-align: center; }
+.dropzone .dz-art { width: 150px; height: 112px; }

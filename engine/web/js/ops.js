@@ -2,7 +2,7 @@
 // made by. Nevertheless_D
 'use strict';
 
-const OP_WORD = { move: '옮기기', copy: '복사', rename: '이름 바꾸기', trash: '휴지통으로', organize: '분류' };
+const OP_WORD = { move: '옮기기', copy: '복사', rename: '이름 바꾸기', trash: '휴지통으로', organize: '분류', convert: 'PDF로' };
 
 async function doAction(act, paths) {
   paths = [...new Set(paths)].filter(Boolean);
@@ -17,6 +17,7 @@ async function doAction(act, paths) {
     case 'rename': return renameDialog(paths);
     case 'organize': return organizeDialog(paths);
     case 'trash': return trashDialog(paths);
+    case 'pdf': return convertDialog(paths);
   }
 }
 
@@ -235,4 +236,87 @@ async function trashDialog(paths) {
   el.onchange = acts;
   openModal({ title: '🗑️ 휴지통으로 옮기기', sub: '바로 지우지 않아요. 휴지통에서 다시 꺼낼 수 있어요.', body });
   acts();
+}
+
+// ════════════════════════════════════════════════ PDF로 바꾸기
+const VIA_TXT = { pdf: '이미 PDF', image: '사진 → PDF', iwork: '', office: '변환 도구', none: '안 돼요' };
+function toolsBannerHTML(t, need) {
+  if (!need || t.installed) return '';
+  const job = (S.jobs || []).find((j) => j.kind === 'tools' && j.state === 'running');
+  if (job || t.installing) {
+    const j = job || { pct: 0, done: 0, total: 0, eta: 0, msg: '' };
+    return `<div class="tools-banner"><span style="font-size:28px">🧰</span><div class="tb"><b>변환 도구를 받는 중이에요</b>${esc(j.msg || '')} · ${comma(j.done)} / ${j.total ? comma(j.total) : '?'}MB ${fmtETA(j.eta) ? '· ' + fmtETA(j.eta) : ''}
+      <div class="jbar${j.total ? '' : ' ind'}"><i style="width:${j.pct || 0}%"></i></div></div></div>`;
+  }
+  return `<div class="tools-banner"><span style="font-size:28px">🧰</span><div class="tb"><b>한글 · 워드 · 엑셀 · 파워포인트는 ‘변환 도구’가 있어야 바꿀 수 있어요</b>
+    무료 문서 프로그램(LibreOffice)과 한글 문서 확장을 이 Mac에 한 번만 받아 둬요. 약 400MB · 몇 분 걸려요. 문서는 밖으로 보내지 않아요.
+    ${t.err ? `<br><span style="color:var(--err)">⚠️ ${esc(t.err)}</span>` : ''}</div><button class="btn brass" id="cvInstall">⬇︎ 받기</button></div>`;
+}
+async function installTools() {
+  try { await api('/api/convert/install', {}); toast('🧰 변환 도구를 받기 시작했어요. 아래 진행 막대에서 남은 시간을 볼 수 있어요'); poll(); }
+  catch (e) { toast('⚠️ ' + e.message); }
+}
+
+async function convertDialog(paths) {
+  let order = [...new Set(paths)];
+  const o = { dest: '', merge: false, name: '' };
+  let chk;
+  try { chk = await api('/api/convert/check', { paths: order }); } catch (e) { return toast('⚠️ ' + e.message); }
+  const body = document.createElement('div');
+  body.innerHTML = `<div id="cvBanner"></div><div class="conv-list" id="cvList"></div><div class="conv-opts" id="cvOpts"></div>`;
+  const usable = (i) => i.method !== 'none' && !(i.need && !chk.tools.installed) && (i.method !== 'pdf' || o.merge);
+  const paintBanner = () => {
+    $('#cvBanner', body).innerHTML = toolsBannerHTML(chk.tools, chk.needTools);
+    const b = $('#cvInstall', body); if (b) b.onclick = async () => { await installTools(); refresh(); };
+  };
+  const paintList = () => {
+    const byPath = Object.fromEntries(chk.items.map((i) => [i.path, i]));
+    $('#cvList', body).innerHTML = order.map((p, k) => {
+      const i = byPath[p]; if (!i) return '';
+      const ok = usable(i);
+      const via = i.method === 'iwork' ? i.via + ' 앱' : VIA_TXT[i.method];
+      const cls = i.method === 'none' ? 'no' : i.need && !chk.tools.installed ? 'need' : i.method === 'pdf' && !o.merge ? '' : 'ok';
+      const note = i.method === 'pdf' && !o.merge ? '이미 PDF예요 (합칠 때만 함께 넣어요)' : i.note || '';
+      return `<div class="crow${ok ? '' : ' off'}">
+        ${o.merge ? `<div class="ord"><button data-up="${k}" ${k ? '' : 'disabled'}>▲</button><button data-down="${k}" ${k < order.length - 1 ? '' : 'disabled'}>▼</button></div>` : `<span style="font-size:18px;text-align:center">${kindOf(i.kind).emoji || '📄'}</span>`}
+        <div class="cn"><b title="${esc(i.path)}">${esc(i.name)}</b><small class="${ok ? '' : 'w'}">${note ? esc(note) : '📁 ' + esc(shortPath(dirName(i.path)))}</small></div>
+        <span class="via ${cls}">${esc(via)}</span></div>`;
+    }).join('');
+    $$('[data-up]', body).forEach((b) => (b.onclick = () => { const k = +b.dataset.up; [order[k - 1], order[k]] = [order[k], order[k - 1]]; paintList(); }));
+    $$('[data-down]', body).forEach((b) => (b.onclick = () => { const k = +b.dataset.down; [order[k + 1], order[k]] = [order[k], order[k + 1]]; paintList(); }));
+    paintActions();
+  };
+  const paintOpts = () => {
+    $('#cvOpts', body).innerHTML = `
+      <div class="field" style="margin:0"><span class="fl">어디에 저장할까요?</span>
+        <div class="seg"><button data-d="" class="${o.dest ? '' : 'on'}">원래 폴더에</button><button data-d="pick" class="${o.dest ? 'on' : ''}">${o.dest ? '📁 ' + esc(folderLabel(o.dest)) : '다른 폴더…'}</button></div>
+        <div class="note" style="margin-top:4px">같은 이름의 PDF가 있으면 ‘(2)’를 붙여요. 원래 문서는 그대로 둬요.</div></div>
+      <div class="field" style="margin:0"><label class="switch-row"><input type="checkbox" id="cvMerge" ${o.merge ? 'checked' : ''} ${chk.tools.merge ? '' : 'disabled'}><span class="switch"></span>모두 하나의 PDF로 합치기</label>
+        ${o.merge ? `<input class="input" id="cvName" placeholder="합친 PDF 이름 (비우면 첫 문서 이름 외 n개)" value="${esc(o.name)}" style="margin-top:6px"><div class="note" style="margin-top:4px">▲▼로 순서를 바꿀 수 있어요. 이미 PDF인 문서도 함께 넣어요.</div>` : '<div class="note" style="margin-top:4px">끄면 문서마다 PDF를 하나씩 만들어요.</div>'}</div>`;
+    $$('[data-d]', body).forEach((b) => (b.onclick = async () => {
+      if (b.dataset.d === 'pick') { const p = await chooseFolder('PDF를 저장할 폴더를 고르세요', o.dest || S.settings.documents); if (p) o.dest = p; }
+      else o.dest = '';
+      paintOpts();
+    }));
+    $('#cvMerge', body).onchange = (e) => { o.merge = e.target.checked; paintOpts(); paintList(); };
+    const nm = $('#cvName', body); if (nm) nm.oninput = () => { o.name = nm.value; };
+  };
+  const paintActions = () => {
+    const n = order.filter((p) => { const i = chk.items.find((x) => x.path === p); return i && usable(i); }).length;
+    setModalActions([{ label: '취소', onClick: closeModal }, {
+      label: o.merge ? `📄 ${comma(n)}개를 PDF 하나로` : `📄 ${comma(n)}개 PDF로 바꾸기`, primary: true, disabled: !n || (o.merge && n < 1),
+      onClick: async () => {
+        try { await api('/api/convert/run', { paths: order, dest: o.dest, merge: o.merge, name: o.name }); closeModal(); toast('⏳ PDF로 바꾸기 시작했어요'); poll(); }
+        catch (e) { toast('⚠️ ' + e.message); }
+      },
+    }]);
+  };
+  let timer = null;
+  const refresh = async () => {
+    try { chk = await api('/api/convert/check', { paths: order }); } catch { return; }
+    paintBanner(); paintList();
+  };
+  openModal({ title: '📄 PDF로 바꾸기', sub: `고른 문서 ${order.length}개`, body, wide: true, onClose: () => clearInterval(timer) });
+  paintBanner(); paintOpts(); paintList();
+  timer = setInterval(() => { if (chk.tools.installing || S.jobs.some((j) => j.kind === 'tools' && j.state === 'running')) refresh(); else if (!chk.tools.installed && chk.needTools) refresh(); }, 1500);
 }

@@ -263,6 +263,55 @@ function paintClBar() {
   };
 }
 
+// ════════════════════════════════════════════════ PDF로 바꾸기
+VIEWS.convert = async () => {
+  const el = $('#view-convert');
+  const t = await api('/api/convert/state').catch(() => null);
+  if (!t) return;
+  const job = (S.jobs || []).find((j) => j.kind === 'tools' && j.state === 'running');
+  const iw = t.iwork || {};
+  el.innerHTML = `
+    ${titleHTML('convert', 'PDF로 바꾸기', '한글 · 워드 · 엑셀 · 파워포인트 · 텍스트 · 사진을 PDF로 바꿔요. 여러 개를 한 번에, 또는 하나의 PDF로 합칠 수도 있어요.')}
+    <div class="grid2">
+      <div class="card">
+        <div class="dropzone"><div class="dz-art" data-art="convert"></div>
+          <b style="font-size:15px">바꿀 문서를 골라 주세요</b>
+          <span class="note">하나 또는 여러 개 · 찾기 화면이나 바구니에서 고른 뒤 <b>📄 PDF로</b>를 눌러도 돼요</span>
+          <div style="display:flex;gap:8px;margin-top:6px"><button class="btn primary" id="cvPick">📄 파일 고르기…</button>${S.basket ? `<button class="btn ghost" id="cvBasket">🧺 바구니의 ${S.basket}개</button>` : ''}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🧰 변환 도구 <span class="sp"></span>${t.installed ? '<span class="tag">준비 완료</span>' : job ? '<span class="tag old">받는 중</span>' : '<span class="tag old">아직 없어요</span>'}</div>
+        <div class="card-sub">${t.installed ? `한글 · 워드 · 엑셀 · 파워포인트를 바꿀 수 있어요. (LibreOffice ${esc(t.lo || '')}${t.hwp ? ' + 한글 확장' : ''} · ${fmtSize(t.size || 0)})` : '한글 · 워드 · 엑셀 · 파워포인트를 바꾸려면 무료 문서 프로그램(LibreOffice)과 한글 문서 확장을 한 번 받아야 해요. 약 400MB · 몇 분 걸려요.'}</div>
+        ${job ? `<div class="jbar${job.total ? '' : ' ind'}"><i style="width:${job.pct}%"></i></div><div class="note" style="margin-top:6px">${esc(job.msg || '')} · ${comma(job.done)} / ${job.total ? comma(job.total) : '?'}MB ${fmtETA(job.eta) ? '· ' + fmtETA(job.eta) : ''}</div>`
+          : t.installed ? '<button class="btn ghost sm" id="cvRemove">🗑️ 변환 도구 지우기 (자리 비우기)</button>' : `<button class="btn brass" id="cvInstall">⬇︎ 변환 도구 받기</button>${t.err ? `<div class="upd-err" style="margin-top:8px">${esc(t.err)}</div>` : ''}`}
+        <div class="kv" style="margin-top:10px"><span>사진 (jpg · png · heic)</span><b>${t.images ? '✅ 바로 돼요' : '—'}</b></div>
+        <div class="kv"><span>Pages · Keynote · Numbers</span><b>${iw.pages || iw.keynote || iw.numbers ? '✅ 맥의 앱으로 바꿔요' : t.installed ? '✅ 변환 도구로' : '앱이나 변환 도구가 필요해요'}</b></div>
+        <div class="kv"><span>여러 PDF 하나로 합치기</span><b>${t.merge ? '✅ 바로 돼요' : '—'}</b></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="card-title">📚 바꿀 수 있는 문서</div>
+      <div class="fmt-grid" style="margin-top:8px">
+        <div class="fmt"><b>📘 한글</b>hwp · hwpx (배포용 · 암호 문서는 안 돼요)</div>
+        <div class="fmt"><b>📄 워드</b>doc · docx · rtf</div>
+        <div class="fmt"><b>📗 엑셀 · 표</b>xls · xlsx · csv (시트마다 쪽이 나뉘어요)</div>
+        <div class="fmt"><b>📙 파워포인트</b>ppt · pptx</div>
+        <div class="fmt"><b>📝 텍스트</b>txt · md</div>
+        <div class="fmt"><b>🖼️ 사진</b>jpg · png · heic</div>
+      </div>
+      <div class="note" style="margin-top:10px">원래 문서는 그대로 두고 옆에 PDF를 새로 만들어요. 글꼴 · 표 · 그림 배치는 원본과 조금 다를 수 있어요. 만든 PDF는 ‘작업 기록’에서 되돌리면 휴지통으로 가요.</div></div>`;
+  paintArt(el);
+  $('#cvPick').onclick = async () => {
+    const j = await api('/api/choose-files', { start: S.settings.documents, prompt: 'PDF로 바꿀 문서를 고르세요 (⌘ 또는 ⇧를 누른 채 여러 개)' }).catch((e) => { toast('⚠️ ' + e.message); return null; });
+    if (j?.paths?.length) convertDialog(j.paths);
+  };
+  const bk = $('#cvBasket'); if (bk) bk.onclick = async () => { const r = await api('/api/basket', {}); convertDialog(r.items.map((d) => d.path)); };
+  const ins = $('#cvInstall'); if (ins) ins.onclick = async () => { await installTools(); setTimeout(VIEWS.convert, 600); };
+  const rm = $('#cvRemove'); if (rm) rm.onclick = async () => {
+    if (!(await confirmBox('변환 도구 지우기', '변환 도구를 지우면 자리가 비워져요. 다시 쓰려면 한 번 더 받아야 해요.', '지우기'))) return;
+    await api('/api/convert/remove', {}).catch((e) => toast('⚠️ ' + e.message)); VIEWS.convert();
+  };
+};
+
 // ════════════════════════════════════════════════ 바구니 (일괄 처리)
 const BK = { items: [], sel: new Set(), missing: 0 };
 window.basketSelected = () => (BK.sel.size ? [...BK.sel] : BK.items.map((d) => d.path));
@@ -287,7 +336,7 @@ VIEWS.basket = async () => {
     ${all ? '' : `<div class="empty"><div data-art="basket"></div><p>바구니가 비어 있어요</p><small>찾기 화면에서 문서를 고르고 ‘🧺 바구니에 담기’를 누르거나,<br>‘파일 고르기’로 하나 또는 여러 파일을 직접 고를 수 있어요.</small></div>`}
     ${all ? `<div class="actbar"><b style="font-size:13px">${target}</b><span class="sp"></span>
       <button class="btn ghost sm" data-b="move">📂 옮기기</button><button class="btn ghost sm" data-b="copy">📑 복사</button>
-      <button class="btn ghost sm" data-b="rename">✏️ 이름 바꾸기</button><button class="btn ghost sm" data-b="organize">🗂️ 분류</button>
+      <button class="btn ghost sm" data-b="rename">✏️ 이름 바꾸기</button><button class="btn ghost sm" data-b="organize">🗂️ 분류</button><button class="btn ghost sm" data-b="pdf">📄 PDF로</button>
       <button class="btn ghost sm" data-b="out">바구니에서 빼기</button><button class="btn danger sm" data-b="trash">🗑️ 휴지통</button></div>` : ''}`;
   paintArt(el);
   $('#bkAll').onchange = (e) => { BK.sel = e.target.checked ? new Set(BK.items.map((d) => d.path)) : new Set(); VIEWS.basket(); };

@@ -74,6 +74,17 @@ const ART = {
   'nav-basket': () => `<svg viewBox="0 0 34 34"><rect width="34" height="34" rx="10" fill="#f6e3dc"/>
     <rect x="10" y="7" width="5" height="12" rx="1" fill="#d4473b"/><rect x="15.5" y="9" width="5" height="10" rx="1" fill="#2f7fd6"/><rect x="21" y="8" width="4" height="11" rx="1" transform="rotate(12 23 19)" fill="#1f8a4c"/>
     <path d="M6 17 h22 l-3 11 h-16 z" fill="#b97a3c"/><path d="M8 20.5 h18 M9 24 h16" stroke="#8a5a2b" stroke-width="1.3"/><path d="M12 17 v11 M17 17 v11 M22 17 v11" stroke="#8a5a2b" stroke-width="1" opacity=".6"/></svg>`,
+  'nav-convert': () => `<svg viewBox="0 0 34 34"><rect width="34" height="34" rx="10" fill="#fbe3df"/>
+    <rect x="6" y="8" width="11" height="15" rx="1.5" fill="#2f7fd6"/><rect x="8" y="11" width="7" height="1.6" fill="#fff" opacity=".7"/><rect x="8" y="14" width="5" height="1.6" fill="#fff" opacity=".7"/>
+    <path d="M17.5 17.5 h4" stroke="#b0822f" stroke-width="2" stroke-linecap="round"/><path d="M20.5 15.2 l2.6 2.3 -2.6 2.3" stroke="#b0822f" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="18" y="12" width="11" height="15" rx="1.5" fill="#d4473b"/><text x="23.5" y="23.5" text-anchor="middle" font-family="Pretendard, sans-serif" font-weight="900" font-size="5" fill="#fff">PDF</text></svg>`,
+  convert: () => `<svg viewBox="0 0 92 70"><ellipse cx="46" cy="64" rx="38" ry="4" style="fill:${V('chip')}"/>
+    <g transform="rotate(-8 22 40)"><rect x="8" y="18" width="26" height="36" rx="2" fill="#2f7fd6"/><rect x="12" y="24" width="18" height="2.5" fill="#fff" opacity=".7"/><rect x="12" y="29" width="14" height="2.5" fill="#fff" opacity=".7"/><text x="21" y="49" text-anchor="middle" font-family="Pretendard" font-weight="900" font-size="7" fill="#fff">HWP</text></g>
+    <rect x="14" y="22" width="26" height="36" rx="2" fill="#d9762b"/><rect x="18" y="28" width="18" height="2.5" fill="#fff" opacity=".7"/><text x="27" y="53" text-anchor="middle" font-family="Pretendard" font-weight="900" font-size="7" fill="#fff">PPT</text>
+    <path d="M44 38 h10" style="stroke:${V('brass')}" stroke-width="3.5" stroke-linecap="round"/><path d="M51 33 l5 5 -5 5" style="stroke:${V('brass')}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="60" y="16" width="26" height="40" rx="2" fill="#d4473b"/><rect x="60" y="16" width="5" height="40" fill="#000" opacity=".15"/><rect x="66" y="23" width="16" height="2.5" fill="#fff" opacity=".7"/><rect x="66" y="28" width="12" height="2.5" fill="#fff" opacity=".7"/>
+    <text x="74" y="50" text-anchor="middle" font-family="'DM Serif Display', serif" font-size="10" fill="#fff">PDF</text>
+    <g style="fill:${V('brass2')}"><path d="M84 8 l1.4 3.4 3.4 1.4 -3.4 1.4 -1.4 3.4 -1.4 -3.4 -3.4 -1.4 3.4 -1.4z"/></g></svg>`,
   'nav-history': () => `<svg viewBox="0 0 34 34"><rect width="34" height="34" rx="10" fill="#ece5f6"/>
     <circle cx="18" cy="17" r="9" fill="#fff" stroke="#6b4fb0" stroke-width="2.4"/><path d="M18 12 v5.5 l3.5 2" stroke="#6b4fb0" stroke-width="2.2" stroke-linecap="round" fill="none"/>
     <path d="M6.5 13 l2.8 3.2 3.4-2.6" stroke="#6b4fb0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,

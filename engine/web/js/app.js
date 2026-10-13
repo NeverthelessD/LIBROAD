@@ -586,6 +586,7 @@ async function showPreview(p) {
       <button class="btn ghost sm" data-b="basket">🧺 바구니에 담기</button>
       <button class="btn ghost sm" data-b="move">📂 옮기기</button>
       <button class="btn ghost sm" data-b="rename">✏️ 이름 바꾸기</button>
+      ${i.ext !== 'pdf' ? '<button class="btn ghost sm" data-b="pdf">📄 PDF로</button>' : ''}
       <button class="btn ghost sm" data-b="trash" style="color:var(--err)">🗑️ 휴지통</button>
     </div>`;
   $('#pvClose').onclick = () => { S.cur = ''; pv.hidden = true; paintSel(); };
@@ -640,7 +641,7 @@ async function addRoot() {
 }
 
 // ════════════════════════════════════════════════ 진행 중인 작업
-const JOB_EMOJI = { index: '🔎', read: '📖', ocr: '🔤', ops: '📦', auto: '🤖', cleanup: '🧹' };
+const JOB_EMOJI = { index: '🔎', read: '📖', ocr: '🔤', ops: '📦', auto: '🤖', cleanup: '🧹', tools: '🧰' };
 const seenDone = new Set();
 function renderJobs(jobs) {
   const box = $('#jobs');
@@ -651,7 +652,7 @@ function renderJobs(jobs) {
     const ind = j.total <= 0 && j.state === 'running';
     const nums = j.total > 0 ? `<b>${comma(j.done)}</b> / ${comma(j.total)}${j.unit} · ${Math.floor(j.pct)}%` : j.done ? `${comma(j.done)}${j.unit}` : '';
     const right = j.state === 'running' ? (fmtETA(j.eta) || (j.total ? '남은 시간 계산 중…' : '')) : j.state === 'done' ? '✅ 끝났어요' : j.state === 'canceled' ? '멈췄어요' : '⚠️ 문제가 있었어요';
-    const cancellable = j.state === 'running' && ['ocr', 'cleanup', 'ops', 'read'].includes(j.kind);
+    const cancellable = j.state === 'running' && ['ocr', 'cleanup', 'ops', 'read', 'tools'].includes(j.kind);
     return `<div class="job ${j.state}"><span class="je">${JOB_EMOJI[j.kind] || '⏳'}</span>
       <div class="jt"><b>${esc(j.title)}</b><small>${esc(j.err || j.msg || '')}</small></div>
       <div class="jbar${ind ? ' ind' : ''}"><i style="width:${j.state === 'done' ? 100 : j.pct}%"></i></div>
@@ -659,6 +660,7 @@ function renderJobs(jobs) {
       ${cancellable ? `<button class="jx" data-id="${j.id}" title="멈추기">■</button>` : '<span></span>'}</div>`;
   }).join('');
   $$('.jx', box).forEach((b) => (b.onclick = () => api('/api/job/cancel', { id: b.dataset.id }).then(poll)));
+  if (S.view === 'convert' && jobs.some((j) => j.kind === 'tools' && j.state === 'running')) { if (!renderJobs.cv) renderJobs.cv = setTimeout(() => { renderJobs.cv = null; if (S.view === 'convert') VIEWS.convert(); }, 1500); }
   // 위쪽 알림
   const run = jobs.filter((j) => j.state === 'running');
   const top = run.find((j) => j.kind === 'ops' || j.kind === 'auto') || run.find((j) => j.kind === 'cleanup') || run.find((j) => j.total > 0) || run[0];
@@ -671,6 +673,7 @@ function renderJobs(jobs) {
     seenDone.add(j.id);
     if (Date.now() - j.finished > 8000) continue;
     window.onJobDone && window.onJobDone(j);
+    if (j.kind === 'tools') { toast(j.state === 'done' ? '🧰 ' + (j.msg || '변환 도구를 받았어요') : '⚠️ ' + (j.err || '변환 도구를 받지 못했어요'), 6000); if (S.view === 'convert') VIEWS.convert(); }
   }
 }
 $('#topLive').onclick = () => $('#jobs').scrollIntoView({ behavior: 'smooth' });
@@ -716,7 +719,7 @@ document.addEventListener('keydown', (e) => {
   if (!$('#menu').hidden && e.key === 'Escape') { closeMenu(); return; }
   if (mod && e.key === 'f') { e.preventDefault(); setView('search'); qIn.focus(); qIn.select(); return; }
   if (mod && e.key === ',') { e.preventDefault(); window.openSettings && openSettings(); return; }
-  if (mod && ['1', '2', '3', '4', '5'].includes(e.key)) { e.preventDefault(); setView(['search', 'organize', 'cleanup', 'basket', 'history'][+e.key - 1]); return; }
+  if (mod && ['1', '2', '3', '4', '5', '6'].includes(e.key)) { e.preventDefault(); setView(['search', 'organize', 'cleanup', 'convert', 'basket', 'history'][+e.key - 1]); return; }
   if (S.view !== 'search' || typing) return;
   if (mod && e.key === 'a' && S.items.length) { e.preventDefault(); S.items.forEach((d) => S.sel.add(d.path)); paintSel(); return; }
   if (e.key === 'Escape') { if (S.sel.size) clearSel(); else if (S.cur) { S.cur = ''; $('#preview').hidden = true; } return; }
