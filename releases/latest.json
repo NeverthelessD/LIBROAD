@@ -2,9 +2,10 @@
   "version": "1.0.0",
   "date": "2026-10-13",
   "zip": "LIBROAD-1.0.0.zip",
-  "sha256": "94ec45b98592263273b74fb1661dfde892caf8990474890da5e3b6b29cf42a53",
-  "size": 11561312,
+  "sha256": "f896a665903fbe038087e6d7ba58d6fc1d8f35d9f1cf7fdda9619ccb06bb0298",
+  "size": 11568090,
   "notes": [
-    "첫 버전이에요"
+    "LIBROAD 첫 버전이에요",
+    "문서 찾기 · 분류 · 옮기기 · 정리 · OCR"
   ]
 }

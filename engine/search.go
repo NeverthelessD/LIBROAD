@@ -485,7 +485,7 @@ func spotlight(terms []term, roots []string) []string {
 			continue
 		}
 		v := strings.NewReplacer(`\`, `\\`, `"`, `\"`, `*`, ``).Replace(t.raw)
-		parts = append(parts, fmt.Sprintf(`(kMDItemTextContent == "*%s*"cdw || kMDItemFSName == "*%s*"cd)`, v, v))
+		parts = append(parts, fmt.Sprintf(`(kMDItemTextContent == "*%s*"cd || kMDItemFSName == "*%s*"cd)`, v, v))
 	}
 	if len(parts) == 0 {
 		return nil

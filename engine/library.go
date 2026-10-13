@@ -636,7 +636,8 @@ func (l *Library) readTexts() {
 		}()
 	}
 	for _, d := range todo {
-		if job.Canceled() {
+		// 새 폴더를 넣는 등 다시 살펴야 하면 잠깐 멈췄다가 이어서 읽어요
+		if job.Canceled() || len(l.kick) > 0 {
 			break
 		}
 		ch <- d
@@ -781,7 +782,8 @@ func (l *Library) runOCR() {
 	}
 	l.setPhase("ocr")
 	job := app.jobs.Start("ocr", "스캔 문서 · 사진 글자 읽기 (OCR)", "장", int64(total))
-	cancel := func() bool { return job.Canceled() || l.ocrStop.Load() || !app.Settings().OCR }
+	kicked := func() bool { return len(l.kick) > 0 }
+	cancel := func() bool { return job.Canceled() || l.ocrStop.Load() || !app.Settings().OCR || kicked() }
 	for i := 0; i < len(list); {
 		if cancel() {
 			break
@@ -865,7 +867,9 @@ func (l *Library) runOCR() {
 		}
 		l.maybeSave()
 	}
-	if cancel() {
+	if kicked() && !job.Canceled() && !l.ocrStop.Load() {
+		job.Finish(nil, "서재를 다시 살핀 뒤 이어서 읽어요")
+	} else if cancel() {
 		job.canceled.Store(true)
 		job.Finish(nil, "글자 인식을 멈췄어요. 나머지는 나중에 이어서 해요")
 	} else {
